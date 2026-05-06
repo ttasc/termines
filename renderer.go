@@ -27,7 +27,7 @@ const (
 	ColorBtnBg     = 237
 
 	ColorFlag        = 196
-	ColorMine        = 250
+	ColorMine        = 196
 	ColorMineExplode = 196
 
 	ColorHoverValid   = 39
