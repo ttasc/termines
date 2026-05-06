@@ -48,7 +48,6 @@ type GameState struct {
 	RevealedCount  int
 	FirstClickDone bool          // Ensures the first reveal is always safe and starts the timer
 	StartTime      time.Time
-	// Duration       time.Duration
 	CursorX        int
 	CursorY        int
 }
@@ -67,7 +66,6 @@ func (gs *GameState) ResetGame(diff Difficulty) {
 	gs.FlagsPlaced = 0
 	gs.RevealedCount = 0
 	gs.FirstClickDone = false
-	// gs.Duration = 0
 
 	// Set cursor to -1 to hide it until the user interacts via keyboard or mouse.
 	gs.CursorX = -1
@@ -79,9 +77,3 @@ func (gs *GameState) ResetGame(diff Difficulty) {
 		gs.Board[i] = make([]Cell, diff.Width)
 	}
 }
-
-// func (gs *GameState) UpdateTimer() {
-// 	if gs.Status == StatusPlaying && gs.FirstClickDone {
-// 		gs.Duration = time.Since(gs.StartTime)
-// 	}
-// }

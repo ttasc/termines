@@ -45,9 +45,6 @@ func main() {
 			}
 		}
 
-		// Sync the elapsed game duration if currently playing.
-		// state.UpdateTimer()
-
 		// Clear and redraw the entire terminal frame based on the mutated state.
 		render(state)
 	}
