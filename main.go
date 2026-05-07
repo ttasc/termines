@@ -45,7 +45,7 @@ func main() {
 			}
 		}
 
-		// Clear and redraw the entire terminal frame based on the mutated state.
+		// Redraw the entire terminal frame based on the mutated state.
 		render(state)
 	}
 }

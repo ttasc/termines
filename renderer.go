@@ -53,7 +53,6 @@ type UIButton struct {
 
 // render executes the complete drawing pipeline for a single frame.
 func render(gs *GameState) {
-	ttbox.Clear()
 	termW, termH := ttbox.Size()
 
 	drawStatusline(gs, termW, termH)
