@@ -36,7 +36,7 @@ func main() {
 		if err == nil {
 
 			// Global exit condition.
-			if evt.Type == ttbox.EventKey && evt.Key == ttbox.KeyEscape {
+			if evt.Type == ttbox.EventKey && (evt.Key == ttbox.KeyEscape || evt.Key == ttbox.KeyCtrlC || evt.Ch == 'q' || evt.Ch == 'Q') {
 				isRunning = false
 			} else {
 
