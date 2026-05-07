@@ -53,6 +53,7 @@ type UIButton struct {
 
 // render executes the complete drawing pipeline for a single frame.
 func render(gs *GameState) {
+	ttbox.Clear()
 	termW, termH := ttbox.Size()
 
 	drawStatusline(gs, termW, termH)
@@ -113,6 +114,11 @@ func getBoardOffsets(gs *GameState, termW, termH int) (int, int) {
 func drawStatusline(gs *GameState, termW, termH int) {
 	diffBtn, _ := getUIElements(gs, termW, termH)
 	y := diffBtn.Y
+
+	if y != 0 {
+		ttbox.DrawTextCenter(1, " T E R M I N E S ", ColorText, ttbox.ColorDefault)
+	}
+
 	centerX := termW / 2
 
 	timerText := formatTime(gs)
