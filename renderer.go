@@ -59,10 +59,11 @@ func render(gs *GameState) {
 	drawStatusline(gs, termW, termH)
 	drawBoard(gs, termW, termH)
 	drawResetButton(gs, termW, termH)
-	drawControlsGuide(termH)
 
 	if gs.Status != StatusPlaying {
-		drawEndgamePopup(gs, termW, termH)
+		drawEndgameBanner(gs, termW, termH)
+	} else {
+		drawControlsGuide(termH)
 	}
 
 	ttbox.Present()
@@ -86,8 +87,9 @@ func getUIElements(gs *GameState, termW, termH int) (diffBtn, resetBtn UIButton)
 	}
 
 	resetY := offsetY + gs.Diff.Height + 1
-	if resetY >= termH-1 {
-		resetY = termH - 2
+	// Cap the reset button position to ensure it doesn't overlap the bottom 2 banner lines.
+	if resetY >= termH-2 {
+		resetY = max(termH-3, 0)
 	}
 
 	resetText := " [ RESET ] "
@@ -154,6 +156,29 @@ func drawControlsGuide(termH int) {
 	ttbox.DrawTextCenter(y, guideText, ColorText, ttbox.ColorDefault)
 }
 
+// drawEndgameBanner displays the game result prominently at the bottom of the screen without covering the board.
+func drawEndgameBanner(gs *GameState, termW, termH int) {
+	if termW == 0 || termH == 0 {
+		return
+	}
+
+	msgFg := ColorWin
+	msg := " ★ YOU WIN! ★ "
+	if gs.Status == StatusLost {
+		msgFg = ColorLose
+		msg = " ★ GAME OVER ★ "
+	}
+	subMsg := " [R] Play Again   [ESC] Exit "
+
+	// Draw the main result message.
+	ttbox.SetAttr(true, false, false, false)
+	ttbox.DrawTextCenter(termH-2, msg, msgFg, ttbox.ColorDefault)
+	ttbox.ResetAttr()
+
+	// Draw the sub-message for key actions.
+	ttbox.DrawTextCenter(termH-1, subMsg, ColorTextDim, ttbox.ColorDefault)
+}
+
 // drawBoard iterates over the 2D game state and renders each cell.
 func drawBoard(gs *GameState, termW, termH int) {
 	offsetX, offsetY := getBoardOffsets(gs, termW, termH)
@@ -173,48 +198,6 @@ func drawBoard(gs *GameState, termW, termH int) {
 			ttbox.SetCell(screenX+2, screenY, rightChar, bracketFg, bg)
 		}
 	}
-}
-
-// drawEndgamePopup renders a centered win/loss modal.
-func drawEndgamePopup(gs *GameState, termW, termH int) {
-	msgFg := ColorWin
-	msg := " YOU WIN! "
-	if gs.Status == StatusLost {
-		msgFg = ColorLose
-		msg = " GAME OVER "
-	}
-	subMsg := " [R] Play Again   [ESC] Exit "
-
-	boxW := len(subMsg) + 6
-	boxH := 5
-	x := (termW - boxW) / 2
-
-	_, offsetY := getBoardOffsets(gs, termW, termH)
-	var y int
-
-	// Dynamic Y positioning: Shift the popup to the opposite vertical half of the screen relative
-	// to the cursor. This prevents the modal from obscuring the cell that ended the game.
-	if gs.CursorY < gs.Diff.Height/2 {
-		y = offsetY + gs.Diff.Height + 1
-		if y+boxH > termH-1 {
-			y = termH - boxH - 1
-		}
-	} else {
-		y = max(offsetY-boxH-1, 2)
-	}
-
-	ttbox.SetColor(ColorText, ColorBgModal)
-	ttbox.Fill(x, y, boxW, boxH, ' ')
-
-	ttbox.SetColor(ColorBoardGrid, ColorBgModal)
-	ttbox.Box(x, y, boxW, boxH)
-
-	ttbox.SetAttr(true, false, false, false)
-	ttbox.DrawTextCenter(y+1, msg, msgFg, ColorBgModal)
-	ttbox.ResetAttr()
-
-	ttbox.DrawTextCenter(y+3, subMsg, ColorTextDim, ColorBgModal)
-	ttbox.SetColor(ttbox.ColorDefault, ttbox.ColorDefault)
 }
 
 // getCellStyle resolves the competing visual states of a single cell into characters and colors.
