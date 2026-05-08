@@ -29,9 +29,9 @@ func main() {
 	for isRunning {
 
 		// Poll for events with a timeout rather than blocking indefinitely.
-		// A 100ms timeout (approx. 10 FPS) keeps CPU usage minimal while ensuring
+		// A 500ms timeout (approx. 5 FPS) keeps CPU usage minimal while ensuring
 		// the elapsed game timer updates and renders even when the user is idle.
-		evt, err := ttbox.PollEventTimeout(100 * time.Millisecond)
+		evt, err := ttbox.PollEventTimeout(500 * time.Millisecond)
 
 		if err == nil {
 

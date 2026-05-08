@@ -148,7 +148,7 @@ func drawResetButton(gs *GameState, termW, termH int) {
 
 // drawControlsGuide renders static keybinding instructions at the bottom edge.
 func drawControlsGuide(termH int) {
-	guideText := " Reveal:L-Click,Space,Enter   Flag:R-Click,F   Move:h,j,k,l;arrows   Reset:R   Mode:1,2,3"
+	guideText := " REVEAL/CHORD:l-click,space,enter | FLAG:r-click,f | MOVE:h,j,k,l;arrows | RESET:r | MODE:1,2,3 "
 	y := termH - 1
 
 	ttbox.DrawTextCenter(y, guideText, ColorText, ttbox.ColorDefault)

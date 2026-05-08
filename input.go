@@ -33,7 +33,11 @@ func handleKeyboardEvent(gs *GameState, evt ttbox.Event) {
 	// Arrows
 	switch evt.Key {
 	case ttbox.KeyEnter:
-		reveal(gs, gs.CursorX, gs.CursorY)
+		if gs.Board[gs.CursorY][gs.CursorX].IsRevealed {
+			chord(gs, gs.CursorX, gs.CursorY)
+		} else {
+			reveal(gs, gs.CursorX, gs.CursorY)
+		}
 	case ttbox.KeyArrowUp:
 		gs.CursorY = clamp(gs.CursorY-1, 0, gs.Diff.Height-1)
 	case ttbox.KeyArrowDown:
@@ -47,7 +51,11 @@ func handleKeyboardEvent(gs *GameState, evt ttbox.Event) {
 	// Vim-keys & Action keys
 	switch evt.Ch {
 	case ' ':
-		reveal(gs, gs.CursorX, gs.CursorY)
+		if gs.Board[gs.CursorY][gs.CursorX].IsRevealed {
+			chord(gs, gs.CursorX, gs.CursorY)
+		} else {
+			reveal(gs, gs.CursorX, gs.CursorY)
+		}
 	case 'h', 'H':
 		gs.CursorX = clamp(gs.CursorX-1, 0, gs.Diff.Width-1)
 	case 'l', 'L':
@@ -97,7 +105,11 @@ func handleMouseEvent(gs *GameState, evt ttbox.Event) {
 		switch evt.Button {
 		case ttbox.MouseLeft:
 			if gs.CursorX == boardX && gs.CursorY == boardY {
-				reveal(gs, boardX, boardY)
+				if gs.Board[boardY][boardX].IsRevealed {
+					chord(gs, boardX, boardY)
+				} else {
+					reveal(gs, boardX, boardY)
+				}
 			} else {
 				gs.CursorX = boardX
 				gs.CursorY = boardY

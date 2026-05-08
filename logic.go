@@ -201,3 +201,55 @@ func toggleFlag(gs *GameState, x, y int) {
 		gs.FlagsPlaced--
 	}
 }
+
+// chord tự động mở các ô xung quanh nếu số cờ xung quanh bằng đúng với số của ô hiện tại.
+func chord(gs *GameState, x, y int) {
+	if gs.Status != StatusPlaying {
+		return
+	}
+
+	cell := &gs.Board[y][x]
+
+	// Chording chỉ áp dụng cho những ô đã mở và có số (AdjacentMines > 0)
+	if !cell.IsRevealed || cell.AdjacentMines == 0 {
+		return
+	}
+
+	w, h := gs.Diff.Width, gs.Diff.Height
+	flagCount := uint8(0)
+
+	// Bước 1: Đếm số lượng cờ thực tế đang cắm xung quanh ô này (trong phạm vi 3x3)
+	for dy := -1; dy <= 1; dy++ {
+		for dx := -1; dx <= 1; dx++ {
+			if dx == 0 && dy == 0 {
+				continue
+			}
+			nx, ny := x+dx, y+dy
+			if nx >= 0 && nx < w && ny >= 0 && ny < h {
+				if gs.Board[ny][nx].IsFlagged {
+					flagCount++
+				}
+			}
+		}
+	}
+
+	// Bước 2: Nếu số cờ bằng đúng với giá trị của ô số
+	if flagCount == cell.AdjacentMines {
+		// Duyệt lại vùng 3x3 một lần nữa để mở các ô chưa mở
+		for dy := -1; dy <= 1; dy++ {
+			for dx := -1; dx <= 1; dx++ {
+				if dx == 0 && dy == 0 {
+					continue
+				}
+				nx, ny := x+dx, y+dy
+				if nx >= 0 && nx < w && ny >= 0 && ny < h {
+					neighbor := &gs.Board[ny][nx]
+					// Chỉ mở những ô chưa mở và chưa bị cắm cờ
+					if !neighbor.IsRevealed && !neighbor.IsFlagged {
+						reveal(gs, nx, ny)
+					}
+				}
+			}
+		}
+	}
+}
