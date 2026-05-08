@@ -6,14 +6,16 @@ A minimalist, terminal-first Minesweeper clone written in Go.
 
 ![](./demo.gif)
 
-**termines** brings the classic logic puzzle to your terminal with a focus on speed, responsiveness, and clean design. Built using the [ttasc/ttbox](https://github.com/ttasc/ttbox) library, it leverages a non-blocking event loop to provide smooth gameplay whether you prefer the mouse, the keyboard, or strict Vim-style navigation.
+**termines** brings the classic logic puzzle to your terminal with a focus on speed, responsiveness, and clean design. Built using the[ttasc/ttbox](https://github.com/ttasc/ttbox) library, it leverages a non-blocking event loop to provide smooth gameplay whether you prefer the mouse, the keyboard, or strict Vim-style navigation.
 
 It exists as both a fully playable game and a practical reference implementation for building structured, state-driven TUI applications in Go without over-engineering.
 
 ## Features
 
 - **Input Freedom**: Full support for Mouse (Left/Right click) and Keyboard (Arrows or `hjkl`).
+- **Advanced Mechanics**: Full support for "Chording". Instantly reveal surrounding cells by clicking/pressing action keys on a revealed number that has enough adjacent flags.
 - **Fair Play**: Guaranteed safe first-click mine generation.
+- **Highly Optimized**: Features $O(N)$ Fisher-Yates mine generation and zero-allocation game resets for snappy performance, even on massive custom boards.
 - **Responsive UI**: The board and UI elements dynamically center themselves based on your terminal window size.
 - **Three Difficulties**: Easy, Medium, and Hard presets.
 - **Zero Fluff**: A tiny, readable codebase with minimal external dependencies.
@@ -32,7 +34,7 @@ go build -o termines
 
 Simply run the executable. You can interact with the game using either your mouse or keyboard.
 ```sh
-./gotermoku
+./termines
 ```
 
 ### Controls
@@ -41,19 +43,20 @@ Simply run the executable. You can interact with the game using either your mous
 | :--- | :--- | :--- |
 | **Move Cursor** | `h`, `j`, `k`, `l` / Arrows | Move Mouse |
 | **Reveal Cell** | `Space` / `Enter` | Left-Click |
+| **Chord (Quick Reveal)** | `Space` / `Enter` on a number | Left-Click on a number |
 | **Toggle Flag** | `f` / `F` | Right-Click |
 | **Reset Game** | `r` / `R` | Left-Click `[ RESET ]` |
 | **Change Difficulty** | `1`, `2`, `3` | Left-Click `[ MODE ]` |
-| **Quit** | `ESC` | - |
+| **Quit** | `ESC` / `q` | - |
 
 ## Architecture
 
 The project adheres to a strict separation of concerns, ensuring that rendering, logic, and state management never bleed into each other.
 
-- `state.go`: **The Source of Truth.** Defines the data models (`GameState`, `Cell`) and state initialization. Holds all mutable data including the grid, timers, and cursor position.
+- `state.go`: **The Source of Truth.** Defines the data models (`GameState`, `Cell`) and state initialization. Holds all mutable data including the grid, timers, and cursor position. Implements memory recycling for fast game resets.
 - `main.go`: **The Orchestrator.** Bootstraps the terminal, manages the application lifecycle, and runs the continuous, non-blocking 100ms game loop.
 - `input.go`: **The Translator.** Parses raw terminal events (keys and mouse coordinates) and maps them to logical game intents.
-- `logic.go`: **The Ruleset.** Implements the core gameplay mechanics, including fair mine generation and the Breadth-First Search (BFS) flood-fill algorithm for revealing empty areas.
+- `logic.go`: **The Ruleset.** Implements the core gameplay mechanics, including fair $O(N)$ mine generation, the Chording mechanic, and the Breadth-First Search (BFS) flood-fill algorithm for revealing empty areas.
 - `renderer.go`: **The View.** A pure function of the state. Clears and redraws the terminal screen every frame, handling spatial math, aspect ratio correction (3:1 character grids), and color formatting.
 
 ## Design Philosophy
