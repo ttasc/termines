@@ -6,130 +6,118 @@ import (
 	"github.com/ttasc/ttbox"
 )
 
-// handleInput processes a single terminal event and updates the GameState.
-// It routes keyboard and mouse inputs to the appropriate game logic.
 func handleInput(gs *GameState, evt ttbox.Event) {
-
-	isGameOver := gs.Status != StatusPlaying
-
 	switch evt.Type {
 	case ttbox.EventKey:
-		// Restrict input to reset commands if the game has ended.
-		if isGameOver {
-			if evt.Ch == 'r' || evt.Ch == 'R' {
-				gs.ResetGame(gs.Diff)
-			}
+		handleKeyboardEvent(gs, evt)
+	case ttbox.EventMouse:
+		handleMouseEvent(gs, evt)
+	}
+}
+
+func handleKeyboardEvent(gs *GameState, evt ttbox.Event) {
+	isGameOver := gs.Status != StatusPlaying
+
+	if isGameOver {
+		if evt.Ch == 'r' || evt.Ch == 'R' {
+			gs.ResetGame(gs.Diff)
+		}
+		return
+	}
+
+	if gs.CursorX < 0 || gs.CursorY < 0 {
+		gs.CursorX = gs.Diff.Width / 2
+		gs.CursorY = gs.Diff.Height / 2
+	}
+
+	// Arrows
+	switch evt.Key {
+	case ttbox.KeyEnter:
+		reveal(gs, gs.CursorX, gs.CursorY)
+	case ttbox.KeyArrowUp:
+		gs.CursorY = clamp(gs.CursorY-1, 0, gs.Diff.Height-1)
+	case ttbox.KeyArrowDown:
+		gs.CursorY = clamp(gs.CursorY+1, 0, gs.Diff.Height-1)
+	case ttbox.KeyArrowLeft:
+		gs.CursorX = clamp(gs.CursorX-1, 0, gs.Diff.Width-1)
+	case ttbox.KeyArrowRight:
+		gs.CursorX = clamp(gs.CursorX+1, 0, gs.Diff.Width-1)
+	}
+
+	// Vim-keys & Action keys
+	switch evt.Ch {
+	case ' ':
+		reveal(gs, gs.CursorX, gs.CursorY)
+	case 'h', 'H':
+		gs.CursorX = clamp(gs.CursorX-1, 0, gs.Diff.Width-1)
+	case 'l', 'L':
+		gs.CursorX = clamp(gs.CursorX+1, 0, gs.Diff.Width-1)
+	case 'k', 'K':
+		gs.CursorY = clamp(gs.CursorY-1, 0, gs.Diff.Height-1)
+	case 'j', 'J':
+		gs.CursorY = clamp(gs.CursorY+1, 0, gs.Diff.Height-1)
+	case 'f', 'F':
+		toggleFlag(gs, gs.CursorX, gs.CursorY)
+	case 'r', 'R':
+		gs.ResetGame(gs.Diff)
+	case '1':
+		gs.ResetGame(DiffEasy)
+	case '2':
+		gs.ResetGame(DiffMedium)
+	case '3':
+		gs.ResetGame(DiffHard)
+	}
+}
+
+func handleMouseEvent(gs *GameState, evt ttbox.Event) {
+	if !evt.Press {
+		return
+	}
+
+	termW, termH := ttbox.Size()
+	diffBtn, resetBtn := getUIElements(gs, termW, termH)
+
+	if evt.Button == ttbox.MouseLeft {
+		if evt.X >= diffBtn.X && evt.X < diffBtn.X+diffBtn.W && evt.Y == diffBtn.Y {
+			cycleDifficulty(gs)
 			return
 		}
-
-		// Center the cursor on first interaction if uninitialized (-1).
-		if gs.CursorX < 0 || gs.CursorY < 0 {
-			gs.CursorX = gs.Diff.Width / 2
-			gs.CursorY = gs.Diff.Height / 2
-		}
-
-		// Handle directional keys for cursor movement.
-		switch evt.Key {
-		case ttbox.KeyEnter:
-			reveal(gs, gs.CursorX, gs.CursorY)
-		case ttbox.KeyArrowUp:
-			gs.CursorY = clamp(gs.CursorY-1, 0, gs.Diff.Height-1)
-		case ttbox.KeyArrowDown:
-			gs.CursorY = clamp(gs.CursorY+1, 0, gs.Diff.Height-1)
-		case ttbox.KeyArrowLeft:
-			gs.CursorX = clamp(gs.CursorX-1, 0, gs.Diff.Width-1)
-		case ttbox.KeyArrowRight:
-			gs.CursorX = clamp(gs.CursorX+1, 0, gs.Diff.Width-1)
-		}
-
-		// Handle vim-keys for movement and specific action characters.
-		switch evt.Ch {
-		case ' ':
-			reveal(gs, gs.CursorX, gs.CursorY)
-		case 'h', 'H':
-			gs.CursorX = clamp(gs.CursorX-1, 0, gs.Diff.Width-1)
-		case 'l', 'L':
-			gs.CursorX = clamp(gs.CursorX+1, 0, gs.Diff.Width-1)
-		case 'k', 'K':
-			gs.CursorY = clamp(gs.CursorY-1, 0, gs.Diff.Height-1)
-		case 'j', 'J':
-			gs.CursorY = clamp(gs.CursorY+1, 0, gs.Diff.Height-1)
-		case 'f', 'F':
-			toggleFlag(gs, gs.CursorX, gs.CursorY)
-		case 'r', 'R':
+		if evt.X >= resetBtn.X && evt.X < resetBtn.X+resetBtn.W && evt.Y == resetBtn.Y {
 			gs.ResetGame(gs.Diff)
-		case '1':
-			gs.ResetGame(DiffEasy)
-		case '2':
-			gs.ResetGame(DiffMedium)
-		case '3':
-			gs.ResetGame(DiffHard)
+			return
 		}
+	}
 
-	case ttbox.EventMouse:
-		if evt.Press {
-			termW, termH := ttbox.Size()
+	if gs.Status != StatusPlaying {
+		return
+	}
 
-			// Calculate UI bounding boxes dynamically to handle terminal resizing.
-			diffBtn, resetBtn := getUIElements(gs, termW, termH)
-
-			if evt.Button == ttbox.MouseLeft {
-				// Check for difficulty toggle button click.
-				if evt.X >= diffBtn.X && evt.X < diffBtn.X+diffBtn.W && evt.Y == diffBtn.Y {
-					cycleDifficulty(gs)
-					return
-				}
-				// Check for manual reset button click.
-				if evt.X >= resetBtn.X && evt.X < resetBtn.X+resetBtn.W && evt.Y == resetBtn.Y {
-					gs.ResetGame(gs.Diff)
-					return
-				}
-			}
-
-			// Ignore board interaction if the game has ended.
-			if isGameOver {
-				return
-			}
-
-			// Map absolute terminal coordinates to 2D board indices.
-			boardX, boardY, ok := screenToBoard(gs, evt.X, evt.Y)
-			if ok {
-				switch evt.Button {
-				case ttbox.MouseLeft:
-					// Require a second click (or pressing space/enter) to reveal a cell.
-					// The first click only snaps the cursor to the target cell.
-					if gs.CursorX == boardX && gs.CursorY == boardY {
-						reveal(gs, boardX, boardY)
-					} else {
-						gs.CursorX = boardX
-						gs.CursorY = boardY
-					}
-				case ttbox.MouseRight:
-					// Right click moves the cursor and instantly toggles the flag.
-					gs.CursorX = boardX
-					gs.CursorY = boardY
-					toggleFlag(gs, boardX, boardY)
-				}
+	boardX, boardY, ok := screenToBoard(gs, evt.X, evt.Y)
+	if ok {
+		switch evt.Button {
+		case ttbox.MouseLeft:
+			if gs.CursorX == boardX && gs.CursorY == boardY {
+				reveal(gs, boardX, boardY)
 			} else {
-				// Clicked outside board bounds; hide cursor.
-				gs.CursorX = -1
-				gs.CursorY = -1
+				gs.CursorX = boardX
+				gs.CursorY = boardY
 			}
+		case ttbox.MouseRight:
+			gs.CursorX = boardX
+			gs.CursorY = boardY
+			toggleFlag(gs, boardX, boardY)
 		}
+	} else {
+		gs.CursorX = -1
+		gs.CursorY = -1
 	}
 }
 
 // cycleDifficulty rotates the current game difficulty through Easy, Medium, and Hard.
 // It triggers an immediate game reset upon changing.
 func cycleDifficulty(gs *GameState) {
-	switch gs.Diff.Name {
-	case DiffEasy.Name:
-		gs.ResetGame(DiffMedium)
-	case DiffMedium.Name:
-		gs.ResetGame(DiffHard)
-	default:
-		gs.ResetGame(DiffEasy)
-	}
+	nextIndex := (gs.DiffIndex + 1) % len(Difficulties)
+	gs.ResetGame(Difficulties[nextIndex])
 }
 
 // clamp restricts a value to the inclusive range [min, max].

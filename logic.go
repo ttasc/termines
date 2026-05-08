@@ -20,30 +20,33 @@ func abs(a int) int {
 func generateMines(gs *GameState, cx, cy int) {
 	w, h := gs.Diff.Width, gs.Diff.Height
 
-	// Prevent infinite loops by capping mines to available cells minus the 3x3 safe zone.
 	maxPossibleMines := max((w*h)-9, 0)
 	targetMines := min(gs.Diff.Mines, maxPossibleMines)
 
-	placed := 0
-	for placed < targetMines {
-		rx := rand.Intn(w)
-		ry := rand.Intn(h)
-
-		if gs.Board[ry][rx].IsMine {
-			continue
+	// Collect all safe coordinates (except the 3x3 area around the first click).
+	validCoords := make([]point, 0, w*h)
+	for y := range h {
+		for x := range w {
+			// Ignore the 3x3 safe zone.
+			if abs(x-cx) <= 1 && abs(y-cy) <= 1 {
+				continue
+			}
+			validCoords = append(validCoords, point{x, y})
 		}
+	}
 
-		// Enforce a 3x3 safe zone around the initial click coordinates.
-		if abs(rx-cx) <= 1 && abs(ry-cy) <= 1 {
-			continue
-		}
+	// Shuffle a valid array of coordinates.
+	rand.Shuffle(len(validCoords), func(i, j int) {
+		validCoords[i], validCoords[j] = validCoords[j], validCoords[i]
+	})
 
-		gs.Board[ry][rx].IsMine = true
-		placed++
+	// Place the mine at the first coordinate in `targetMines` after mixing.
+	for i := range targetMines {
+		p := validCoords[i]
+		gs.Board[p.y][p.x].IsMine = true
 	}
 
 	// Pre-calculate adjacent mine counts for all non-mine cells.
-	// This single O(N*M) pass prevents dynamic calculation overhead during rendering.
 	for y := range h {
 		for x := range w {
 			if gs.Board[y][x].IsMine {
@@ -132,8 +135,10 @@ func reveal(gs *GameState, x, y int) {
 
 	// Breadth-First Search (BFS) flood-fill algorithm.
 	// Iteratively reveals empty neighboring cells.
-	queue :=[]point{{x, y}}
 	w, h := gs.Diff.Width, gs.Diff.Height
+	// Allocate approximately 25% of the total number of cells in the table in terms of capacity.
+	queue := make([]point, 0, (w*h)/4)
+	queue = append(queue, point{x, y})
 
 	for len(queue) > 0 {
 		curr := queue[0]
@@ -182,5 +187,17 @@ func toggleFlag(gs *GameState, x, y int) {
 		return
 	}
 
-	gs.Board[y][x].IsFlagged = !gs.Board[y][x].IsFlagged
+	cell := &gs.Board[y][x]
+
+	if cell.IsRevealed {
+		return
+	}
+
+	cell.IsFlagged = !cell.IsFlagged
+
+	if cell.IsFlagged {
+		gs.FlagsPlaced++
+	} else {
+		gs.FlagsPlaced--
+	}
 }
