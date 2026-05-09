@@ -163,10 +163,10 @@ func drawEndgameBanner(gs *GameState, termW, termH int) {
 	}
 
 	msgFg := ColorWin
-	msg := " ★ YOU WIN! ★ "
+	msg := " * YOU WIN! * "
 	if gs.Status == StatusLost {
 		msgFg = ColorLose
-		msg = " ★ GAME OVER ★ "
+		msg = " * GAME OVER * "
 	}
 	subMsg := " [R] Play Again   [ESC] Exit "
 
