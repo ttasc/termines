@@ -1,4 +1,4 @@
-# termines
+# 💣 termines
 
 A minimalist, terminal-first Minesweeper clone written in Go.
 
@@ -12,13 +12,11 @@ It exists as both a fully playable game and a practical reference implementation
 
 ## Features
 
-- **Input Freedom**: Full support for Mouse (Left/Right click) and Keyboard (Arrows or `hjkl`).
-- **Advanced Mechanics**: Full support for "Chording". Instantly reveal surrounding cells by clicking/pressing action keys on a revealed number that has enough adjacent flags.
-- **Fair Play**: Guaranteed safe first-click mine generation.
-- **Highly Optimized**: Features $O(N)$ Fisher-Yates mine generation and zero-allocation game resets for snappy performance, even on massive custom boards.
-- **Responsive UI**: The board and UI elements dynamically center themselves based on your terminal window size.
+- **Mouse/Vim-key**: Full support for Mouse (Left/Right click) and Keyboard (Arrows or `hjkl`).
+- **Chording**: Full support for "Chording". Instantly reveal surrounding cells by clicking/pressing action keys on a revealed number that has enough adjacent flags.
+- **First-click safe**: Guaranteed safe first-click mine generation.
+- **Optimized**: Features $O(N)$ Fisher-Yates mine generation and zero-allocation game resets for snappy performance, even on massive custom boards.
 - **Three Difficulties**: Easy, Medium, and Hard presets.
-- **Zero Fluff**: A tiny, readable codebase with minimal external dependencies.
 
 ## Installation
 
